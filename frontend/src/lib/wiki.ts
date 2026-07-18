@@ -87,7 +87,7 @@ export function buildPageLookupMap(force = false) {
         // Last part: remove .md extension
         const nameWithoutExt = path.basename(part, '.md');
         // Folder notes (e.g. BGB/BGB.md) should be served at BGB/ rather than BGB/BGB
-        if (i > 1 && nameWithoutExt.toLowerCase() === parts[i - 1].toLowerCase()) {
+        if (i > 0 && nameWithoutExt.toLowerCase() === parts[i - 1].toLowerCase()) {
           // Do not append duplicate name
         } else {
           urlSegments.push(nameWithoutExt);
