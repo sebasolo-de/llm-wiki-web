@@ -15,8 +15,9 @@ ssh $SERVER << EOF
     set -e
 
     # 1. Content-Repository aktualisieren/initialisieren
-    if [ ! -d "$REMOTE_CONTENT_DIR" ]; then
+    if [ ! -d "$REMOTE_CONTENT_DIR/.git" ]; then
         echo "Initialisiere Content-Repository auf dem Server..."
+        rm -rf $REMOTE_CONTENT_DIR
         git clone $CONTENT_REPO $REMOTE_CONTENT_DIR
     else
         echo "Ziehe neueste Content-Änderungen..."
@@ -25,7 +26,7 @@ ssh $SERVER << EOF
     fi
 
     # 2. Web-Repository aktualisieren/initialisieren
-    if [ ! -d "$REMOTE_DIR" ]; then
+    if [ ! -d "$REMOTE_DIR/.git" ]; then
         echo "Initialisiere Web-Repository auf dem Server..."
         mkdir -p $REMOTE_DIR
         cd $REMOTE_DIR
