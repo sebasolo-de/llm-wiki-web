@@ -187,6 +187,10 @@ function preprocessWikilinks(markdown: string, lookupMap: Map<string, any>): str
     const alias = (aliasPart || targetPart).trim();
     const section = sectionPart ? `#${slugifySection(sectionPart)}` : '';
 
+    if (!cleanTargetName) {
+      return `<a href="${section}">${alias}</a>`;
+    }
+
     const lowercaseTarget = cleanTargetName.toLowerCase().replace(/\\/g, '/');
     const entry = lookupMap.get(lowercaseTarget);
 
@@ -211,15 +215,54 @@ function slugifySection(section: string): string {
   return section.trim().toLowerCase().replace(/[^a-z0-9\u00e0-\u00fc]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+function injectHeadingIds(html: string): string {
+  const headingRegex = /<h([23])>([\s\S]*?)<\/h\1>/gi;
+  const seenIds = new Set<string>();
+  let buchCount = 0;
+
+  let processedHtml = html.replace(headingRegex, (match, level, content) => {
+    const rawText = content.replace(/<[^>]+>/g, '').trim();
+    let id = slugifySection(rawText);
+    
+    let counter = 1;
+    let uniqueId = id;
+    while (seenIds.has(uniqueId)) {
+      uniqueId = `${id}-${counter}`;
+      counter++;
+    }
+    seenIds.add(uniqueId);
+
+    let prefix = '';
+    // If it's an H2 and starts with "Buch" (case-insensitive)
+    if (level === '2' && /^Buch\s+/i.test(rawText)) {
+      buchCount++;
+      // Prepend HR and "To Top" link for all subsequent Buch headings
+      if (buchCount > 1) {
+        prefix = `<hr class="chapter-divider" /><div class="to-top-container"><a href="#main-content" class="to-top-link">↑ Nach oben</a></div>\n`;
+      }
+    }
+
+    return `${prefix}<h${level} id="${uniqueId}">${content}</h${level}>`;
+  });
+
+  // If we found any "Buch" headings, append HR and "To Top" link at the very end of the content
+  if (buchCount > 0) {
+    processedHtml += `\n<hr class="chapter-divider" /><div class="to-top-container"><a href="#main-content" class="to-top-link">↑ Nach oben</a></div>`;
+  }
+
+  return processedHtml;
+}
+
 // Parse markdown to safe HTML
 export function parseWikiMarkdown(markdown: string, lookupMap: Map<string, any>): string {
   let processed = preprocessCallouts(markdown);
   processed = preprocessWikilinks(processed, lookupMap);
   
   const rawHtml = marked.parse(processed, { async: false }) as string;
+  const htmlWithIds = injectHeadingIds(rawHtml);
   
   // Custom sanitize-html configuration to allow custom elements & attributes
-  return sanitizeHtml(rawHtml, {
+  return sanitizeHtml(htmlWithIds, {
     allowedTags: [
       ...sanitizeHtml.defaults.allowedTags,
       'div', 'span', 'details', 'summary', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
@@ -233,6 +276,7 @@ export function parseWikiMarkdown(markdown: string, lookupMap: Map<string, any>)
       'h2': ['id'],
       'h3': ['id'],
       'h4': ['id'],
+      'hr': ['class']
     }
   });
 }

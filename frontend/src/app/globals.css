@@ -549,3 +549,35 @@ a:hover {
     padding: 0 1rem;
   }
 }
+
+/* Chapter dividers and Back to Top links */
+.chapter-divider {
+  margin: 3.5rem 0 2rem 0;
+  border: 0;
+  border-top: 2px solid var(--border-color);
+  opacity: 0.8;
+}
+
+.to-top-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
+}
+
+.to-top-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent-primary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.to-top-link:hover {
+  background-color: var(--border-color);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
