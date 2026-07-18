@@ -20,7 +20,10 @@ services:
     restart: unless-stopped
     networks:
       - remote-proxy-network
+      - local-dev-network
 
 networks:
   remote-proxy-network:
+    external: true
+  local-dev-network:
     external: true
