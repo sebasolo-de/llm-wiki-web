@@ -48,7 +48,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps) {
   const resolvedParams = await params;
-  const slug = resolvedParams.slug || [];
+  const rawSlug = resolvedParams.slug || [];
+  const slug = rawSlug.map(s => decodeURIComponent(s));
 
   if (slug.length === 0) {
     return {
@@ -85,7 +86,8 @@ function getCategoryName(cat: string): string {
 
 export default async function WikiPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const slug = resolvedParams.slug || [];
+  const rawSlug = resolvedParams.slug || [];
+  const slug = rawSlug.map(s => decodeURIComponent(s));
   
   let pageTitle = '';
   let category = '';
