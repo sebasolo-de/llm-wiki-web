@@ -6,17 +6,15 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-https://llm-wiki.hebler-betreuung.de}"
-        WIKI_CONTENT_PATH: "${WIKI_CONTENT_PATH:-/app/wiki}"
+        WIKI_CONTENT_PATH: "${WIKI_CONTENT_PATH:-/app/content}"
     container_name: llm_wiki_frontend
     environment:
       NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-https://llm-wiki.hebler-betreuung.de}"
-      WIKI_CONTENT_PATH: "${WIKI_CONTENT_PATH:-/app/wiki}"
-      WIKI_RAW_PATH: "${WIKI_RAW_PATH:-/app/raw}"
+      WIKI_CONTENT_PATH: "${WIKI_CONTENT_PATH:-/app/content}"
       PORT: 3000
     volumes:
-      # Mount the wiki and raw directories from the host content repo
-      - "${HOST_WIKI_PATH:-/opt/llm-wiki-public/wiki}:/app/wiki:ro"
-      - "${HOST_RAW_PATH:-/opt/llm-wiki-public/raw}:/app/raw:ro"
+      # Mount the content repository root containing index.md, wiki/ and raw/
+      - "${HOST_CONTENT_PATH:-/opt/llm-wiki-public}:/app/content:ro"
     restart: unless-stopped
     networks:
       - remote-proxy-network

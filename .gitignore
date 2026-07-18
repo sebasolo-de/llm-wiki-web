@@ -20,10 +20,8 @@ frontend/.env.local
 Thumbs.db
 
 # Temp local content directories (Option B: copy/mount on VPS)
-frontend/content-wiki/
-frontend/content-raw/
-content-wiki/
-content-raw/
+frontend/content/
+content/
 
 # Log files
 *.log

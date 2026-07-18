@@ -44,12 +44,14 @@ ssh $SERVER << EOF
 
     # 3. Content in den Build-Kontext kopieren (für Next.js SSG beim Docker-Build)
     echo "Kopiere Content in den Docker-Build-Kontext..."
-    rm -rf frontend/content-wiki frontend/content-raw
-    cp -r $REMOTE_CONTENT_DIR/wiki ./frontend/content-wiki
-    cp -r $REMOTE_CONTENT_DIR/raw ./frontend/content-raw
+    rm -rf frontend/content
+    mkdir -p frontend/content
+    cp -r $REMOTE_CONTENT_DIR/wiki ./frontend/content/wiki
+    cp -r $REMOTE_CONTENT_DIR/raw ./frontend/content/raw
+    cp $REMOTE_CONTENT_DIR/index.md ./frontend/content/index.md
 
     echo "Baue und starte Docker Container..."
-    docker compose build --build-arg WIKI_CONTENT_PATH=./content-wiki
+    docker compose build --build-arg WIKI_CONTENT_PATH=./content
     docker compose up -d
 
     echo "Lade Caddy neu..."
