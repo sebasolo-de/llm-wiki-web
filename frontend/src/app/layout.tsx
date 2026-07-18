@@ -66,18 +66,6 @@ export default function RootLayout({
                 <span className="logo-text">⚖️ LLM-Wiki Betreuungsrecht</span>
               </Link>
             </div>
-            
-            <nav className="header-nav">
-              <Link href="/" className="nav-link">
-                Home
-              </Link>
-              <Link href="/gesetze/BGB/BGB" className="nav-link">
-                BGB Systematik
-              </Link>
-              <Link href="/meta/Quellenregister" className="nav-link">
-                Quellen
-              </Link>
-            </nav>
           </header>
 
           {/* Page Content */}

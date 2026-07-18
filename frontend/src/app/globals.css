@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Strichpunkt+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap');
+
 /* Modern, Premium CSS Design System for LLM-Wiki */
 
 :root {
@@ -8,10 +10,10 @@
   --text-secondary: #475569;
   --text-muted: #94a3b8;
   
-  --accent-primary: #6366f1; /* Indigo */
+  --accent-primary: #18181b; /* Default minimalist dark accent */
   --accent-secondary: #06b6d4; /* Cyan */
-  --accent-hover: #4f46e5;
-  --accent-bg-soft: #e0e7ff;
+  --accent-hover: #3f3f46;
+  --accent-bg-soft: #f4f4f5;
   
   --border-color: #e2e8f0;
   --border-focus: #cbd5e1;
@@ -20,11 +22,11 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-premium: 0 20px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
   
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Strichpunkt Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   
   --sidebar-width: 280px;
@@ -106,6 +108,21 @@ a {
 
 a:hover {
   color: var(--accent-hover);
+}
+
+/* Links in the content area */
+.wiki-body a {
+  color: var(--accent-primary);
+  font-weight: 600; /* links semi-bold */
+  text-decoration: underline;
+  text-underline-offset: 3.5px;
+  text-decoration-color: var(--border-color);
+  transition: text-decoration-color 0.2s ease, color 0.2s ease;
+}
+
+.wiki-body a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--accent-hover);
 }
 
 /* Scrollbars */
@@ -241,6 +258,20 @@ a:hover {
   font-size: 0.95rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 2.5rem; /* align with the text, skipping the SVG icon */
+  right: 0.8rem;
+  height: 2px;
+  background-color: var(--accent-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-link:hover {
@@ -248,9 +279,23 @@ a:hover {
   color: var(--text-primary);
 }
 
+.sidebar-link:hover::after,
+.sidebar-link.active::after {
+  transform: scaleX(1);
+}
+
 .sidebar-link.active {
   background-color: var(--accent-bg-soft);
   color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.75rem;
+  stroke-width: 1.5;
+  flex-shrink: 0;
 }
 
 /* Content Container */
@@ -320,6 +365,17 @@ a:hover {
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5rem;
+}
+
+.wiki-body h1:first-of-type {
+  margin-top: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 1.5rem;
 }
 
 .wiki-body h2 {

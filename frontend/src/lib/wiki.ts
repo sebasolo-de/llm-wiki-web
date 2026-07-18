@@ -253,10 +253,16 @@ function injectHeadingIds(html: string): string {
   return processedHtml;
 }
 
+function preprocessBlockIds(markdown: string): string {
+  // Matches " ^id" at the end of a line (or before a newline/end of text)
+  return markdown.replace(/\s\^([a-zA-Z0-9\-]+)(?=\s|$)/gm, ' <span id="$1" class="block-target"></span>');
+}
+
 // Parse markdown to safe HTML
 export function parseWikiMarkdown(markdown: string, lookupMap: Map<string, any>): string {
   let processed = preprocessCallouts(markdown);
   processed = preprocessWikilinks(processed, lookupMap);
+  processed = preprocessBlockIds(processed);
   
   const rawHtml = marked.parse(processed, { async: false }) as string;
   const htmlWithIds = injectHeadingIds(rawHtml);
