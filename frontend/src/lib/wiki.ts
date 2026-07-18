@@ -40,9 +40,22 @@ function getFilesRecursive(dir: string): string[] {
   return Array.prototype.concat(...files);
 }
 
+export function slugifyUrlSegment(segment: string): string {
+  return segment
+    .toLowerCase()
+    .trim()
+    // Replace spaces and typical URL-unfriendly characters with hyphens
+    .replace(/[\s\(\)\/\\&,:\.\?]+/g, '-')
+    // Collapse consecutive hyphens
+    .replace(/-+/g, '-')
+    // Remove leading and trailing hyphens
+    .replace(/^-+|-+$/g, '');
+}
+
 // Build a map from lowercase filename (and paths) to relative URLs
 export function buildPageLookupMap(force = false) {
-  if (pageLookupCache && !force) {
+  const isDev = process.env.NODE_ENV === 'development';
+  if (pageLookupCache && !force && !isDev) {
     return pageLookupCache;
   }
 
@@ -84,7 +97,7 @@ export function buildPageLookupMap(force = false) {
       }
     }
 
-    const url = '/' + urlSegments.join('/');
+    const url = '/' + urlSegments.map(s => slugifyUrlSegment(s)).join('/');
     const basename = path.basename(relPath, '.md');
     const lowercaseBasename = basename.toLowerCase();
     const lowercaseRelPath = relPath.replace(/\.md$/, '').toLowerCase().replace(/\\/g, '/');
