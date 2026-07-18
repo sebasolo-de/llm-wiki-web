@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Next.js build
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+frontend/.env
+frontend/.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp local content directories (Option B: copy/mount on VPS)
+frontend/content-wiki/
+frontend/content-raw/
+content-wiki/
+content-raw/
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
