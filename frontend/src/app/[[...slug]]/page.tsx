@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { 
   getPageBySlug, 
   buildPageLookupMap, 
-  parseWikiMarkdown 
+  parseWikiMarkdown,
+  getPagesByCategory
 } from '@/lib/wiki';
 
 // Force static rendering parameter generation
@@ -24,6 +25,12 @@ export async function generateStaticParams() {
 
     // Add empty slug for home page (index.md)
     paramsList.push({ slug: [] });
+
+    // Add category slugs
+    const validCategories = ['aktuelles', 'themen', 'gesetze', 'rechtsprechung', 'glossar', 'sachkunde', 'fachliteratur'];
+    for (const cat of validCategories) {
+      paramsList.push({ slug: [cat] });
+    }
 
     for (const val of lookup.values()) {
       const slugParts = val.url.substring(1).split('/');
@@ -63,6 +70,19 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
+function getCategoryName(cat: string): string {
+  const mapping: Record<string, string> = {
+    aktuelles: 'Aktuelles',
+    themen: 'Themen',
+    gesetze: 'Gesetze',
+    rechtsprechung: 'Rechtsprechung',
+    glossar: 'Glossar',
+    sachkunde: 'Sachkunde',
+    fachliteratur: 'Fachliteratur'
+  };
+  return mapping[cat] || cat;
+}
+
 export default async function WikiPage({ params }: PageProps) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug || [];
@@ -95,13 +115,32 @@ export default async function WikiPage({ params }: PageProps) {
   } else {
     const page = getPageBySlug(slug);
     if (!page) {
-      notFound();
+      const possibleCategory = slug[0].toLowerCase();
+      const validCategories = ['aktuelles', 'themen', 'gesetze', 'rechtsprechung', 'glossar', 'sachkunde', 'fachliteratur'];
+      
+      if (slug.length === 1 && validCategories.includes(possibleCategory)) {
+        category = possibleCategory;
+        pageTitle = getCategoryName(category);
+        const pages = getPagesByCategory(category);
+        pages.sort((a, b) => a.title.localeCompare(b.title));
+        
+        htmlContent = `
+          <p>Hier finden Sie alle Einträge in der Kategorie <strong>${pageTitle}</strong>:</p>
+          <ul class="category-page-list">
+            ${pages.map(p => `<li><a href="${p.url}">${p.title}</a></li>`).join('')}
+          </ul>
+        `;
+        frontmatter = { title: pageTitle };
+      } else {
+        notFound();
+      }
+    } else {
+      pageTitle = page.title;
+      category = page.category;
+      htmlContent = page.htmlContent;
+      backlinks = page.backlinks;
+      frontmatter = page.frontmatter;
     }
-    pageTitle = page.title;
-    category = page.category;
-    htmlContent = page.htmlContent;
-    backlinks = page.backlinks;
-    frontmatter = page.frontmatter;
   }
 
   // Generate Table of Contents (headings h2 and h3) from HTML
