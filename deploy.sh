@@ -49,6 +49,7 @@ ssh $SERVER << EOF
     cp -r $REMOTE_CONTENT_DIR/wiki ./frontend/content/wiki
     cp -r $REMOTE_CONTENT_DIR/raw ./frontend/content/raw
     cp $REMOTE_CONTENT_DIR/index.md ./frontend/content/index.md
+    cp $REMOTE_CONTENT_DIR/[Dd]esign.md ./frontend/content/Design.md 2>/dev/null || true
 
     echo "Baue und starte Docker Container..."
     docker compose build --build-arg WIKI_CONTENT_PATH=./content

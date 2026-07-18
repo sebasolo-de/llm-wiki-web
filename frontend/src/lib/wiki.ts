@@ -359,3 +359,183 @@ export function getPagesByCategory(category: string) {
 
   return pages;
 }
+
+export interface DesignSettings {
+  variables: Record<string, string>;
+  customCss: string;
+  googleFonts: string[];
+}
+
+export const PRESETS: Record<string, Record<string, string>> = {
+  'minimalist-light': {
+    '--bg-primary': '#ffffff',
+    '--bg-secondary': '#fafafa',
+    '--text-primary': '#18181b',
+    '--text-secondary': '#52525b',
+    '--text-muted': '#a1a1aa',
+    '--accent-primary': '#18181b',
+    '--accent-secondary': '#27272a',
+    '--accent-hover': '#3f3f46',
+    '--accent-bg-soft': '#f4f4f5',
+    '--border-color': '#e4e4e7',
+    '--border-focus': '#a1a1aa',
+    '--radius-sm': '4px',
+    '--radius-md': '6px',
+    '--radius-lg': '8px',
+    '--shadow-premium': 'none',
+  },
+  'sleek-dark': {
+    '--bg-primary': '#09090b',
+    '--bg-secondary': '#121214',
+    '--text-primary': '#f4f4f5',
+    '--text-secondary': '#a1a1aa',
+    '--text-muted': '#71717a',
+    '--accent-primary': '#f4f4f5',
+    '--accent-secondary': '#a1a1aa',
+    '--accent-hover': '#e4e4e7',
+    '--accent-bg-soft': '#18181b',
+    '--border-color': '#27272a',
+    '--border-focus': '#3f3f46',
+    '--radius-sm': '4px',
+    '--radius-md': '8px',
+    '--radius-lg': '12px',
+    '--shadow-premium': '0 0 0 1px rgba(255,255,255,0.05)',
+  },
+  'obsidian-dark': {
+    '--bg-primary': '#1e1e1e',
+    '--bg-secondary': '#2a2a2a',
+    '--text-primary': '#dcddde',
+    '--text-secondary': '#a3a6ac',
+    '--text-muted': '#72767d',
+    '--accent-primary': '#7a67ee',
+    '--accent-secondary': '#9a8cff',
+    '--accent-hover': '#b5aaff',
+    '--accent-bg-soft': '#363636',
+    '--border-color': '#3a3a3a',
+    '--border-focus': '#5a5a5a',
+    '--radius-sm': '4px',
+    '--radius-md': '4px',
+    '--radius-lg': '6px',
+    '--shadow-premium': 'none',
+  },
+  'nordic-frost': {
+    '--bg-primary': '#f0f4f8',
+    '--bg-secondary': '#ffffff',
+    '--text-primary': '#2e3440',
+    '--text-secondary': '#4c566a',
+    '--text-muted': '#d8dee9',
+    '--accent-primary': '#5e81ac',
+    '--accent-secondary': '#81a1c1',
+    '--accent-hover': '#4c566a',
+    '--accent-bg-soft': '#e5e9f0',
+    '--border-color': '#d8dee9',
+    '--border-focus': '#88c0d0',
+    '--radius-sm': '6px',
+    '--radius-md': '10px',
+    '--radius-lg': '16px',
+  },
+  'emerald-forest': {
+    '--bg-primary': '#f4f6f4',
+    '--bg-secondary': '#ffffff',
+    '--text-primary': '#112211',
+    '--text-secondary': '#2d4a36',
+    '--text-muted': '#889988',
+    '--accent-primary': '#1b4d3e',
+    '--accent-secondary': '#2c6b56',
+    '--accent-hover': '#0f3025',
+    '--accent-bg-soft': '#e8f0eb',
+    '--border-color': '#d0dad4',
+    '--border-focus': '#88b598',
+    '--radius-sm': '8px',
+    '--radius-md': '12px',
+    '--radius-lg': '20px',
+  },
+  'royal-indigo': {
+    '--bg-primary': '#faf9ff',
+    '--bg-secondary': '#ffffff',
+    '--text-primary': '#0b001a',
+    '--text-secondary': '#4d445c',
+    '--text-muted': '#a79cb8',
+    '--accent-primary': '#4f46e5',
+    '--accent-secondary': '#7c3aed',
+    '--accent-hover': '#4338ca',
+    '--accent-bg-soft': '#f0eeff',
+    '--border-color': '#e8e5f0',
+    '--border-focus': '#c7bfe6',
+    '--radius-sm': '6px',
+    '--radius-md': '12px',
+    '--radius-lg': '20px',
+  }
+};
+
+export function getDesignSettings(): DesignSettings {
+  const defaultSettings: DesignSettings = {
+    variables: {},
+    customCss: '',
+    googleFonts: [],
+  };
+
+  // The design file can be at the root of WIKI_ROOT
+  const designPath = path.join(WIKI_ROOT, 'Design.md');
+  if (fs.existsSync(designPath)) {
+    return parseDesignFile(designPath);
+  }
+  
+  const lowerDesignPath = path.join(WIKI_ROOT, 'design.md');
+  if (fs.existsSync(lowerDesignPath)) {
+    return parseDesignFile(lowerDesignPath);
+  }
+
+  // Also check inside content folder in case it was copied to frontend/content
+  const contentDesignPath = path.join(process.cwd(), 'content', 'Design.md');
+  if (fs.existsSync(contentDesignPath)) {
+    return parseDesignFile(contentDesignPath);
+  }
+
+  const contentDesignPathLower = path.join(process.cwd(), 'content', 'design.md');
+  if (fs.existsSync(contentDesignPathLower)) {
+    return parseDesignFile(contentDesignPathLower);
+  }
+
+  return defaultSettings;
+}
+
+function parseDesignFile(filePath: string): DesignSettings {
+  try {
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const { data: frontmatter, content } = matter(fileContent);
+    
+    const variables: Record<string, string> = {};
+    const googleFonts: string[] = [];
+
+    // Process presets first if specified
+    if (frontmatter.theme_preset && PRESETS[frontmatter.theme_preset]) {
+      Object.assign(variables, PRESETS[frontmatter.theme_preset]);
+    }
+
+    // Process frontmatter variables
+    for (const [key, value] of Object.entries(frontmatter)) {
+      if (key === 'google_fonts' && Array.isArray(value)) {
+        googleFonts.push(...value.map(f => String(f)));
+      } else if (key !== 'theme_preset' && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')) {
+        // Convert snake_case or camelCase key to CSS property (--accent-primary)
+        const cssKey = '--' + key.replace(/_/g, '-').replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        variables[cssKey] = String(value);
+      }
+    }
+    
+    // Parse custom CSS blocks from markdown content
+    let customCss = '';
+    const cssBlockRegex = /```css\s*([\s\S]*?)```/gi;
+    let match;
+    while ((match = cssBlockRegex.exec(content)) !== null) {
+      customCss += match[1] + '\n';
+    }
+    
+    return { variables, customCss, googleFonts };
+  } catch (e) {
+    console.error('Error parsing design file:', e);
+    return { variables: {}, customCss: '', googleFonts: [] };
+  }
+}
+
