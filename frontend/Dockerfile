@@ -35,6 +35,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+# Der Wiki-Content gehört ins Image (deploy.sh spiegelt ihn vor dem Build nach frontend/content);
+# WIKI_CONTENT_PATH=/app/content zur Laufzeit zeigt genau hierhin. Kein Bind-Mount mehr (MMP 6.3).
+COPY --from=builder --chown=nextjs:nodejs /app/content ./content
 
 # Set the correct permission for prerender cache
 RUN mkdir .next

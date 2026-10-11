@@ -4,10 +4,38 @@ import matter from 'gray-matter';
 import { marked } from 'marked';
 import sanitizeHtml from 'sanitize-html';
 
-// Determine the wiki content root directory
-const WIKI_ROOT = process.env.WIKI_CONTENT_PATH 
-  ? path.resolve(process.env.WIKI_CONTENT_PATH) 
-  : '/Users/sebastian/Sites/LLM-WIKI.public';
+// Determine the wiki content root directory.
+// Fallback is ./content relative to the working directory (what deploy.sh mirrors and the
+// Dockerfile copies into the image), no longer a developer's absolute path (MMP 6.4, 2026-10-11).
+const WIKI_ROOT = process.env.WIKI_CONTENT_PATH
+  ? path.resolve(process.env.WIKI_CONTENT_PATH)
+  : path.resolve(process.cwd(), 'content');
+
+// Frontmatter lesen, ohne dass eine einzelne fehlerhafte Notiz den gesamten Build stoppt.
+// gray-matter (js-yaml, strikt) wirft z. B. bei einem geraden Anführungszeichen innerhalb eines
+// doppelt gequoteten Skalars (2026-10-11: „Bürgergeld" in einer description brach den Export bei
+// Seite 466 von 932 ab). Rückfall: flacher key: value-Leser wie tools/common.py im Vault; der Fehler
+// landet als Warnung im Build-Log, die Seite wird trotzdem gebaut.
+export function safeMatter(fileContent: string, filePath = ''): { data: Record<string, any>; content: string } {
+  try {
+    const parsed = matter(fileContent);
+    return { data: parsed.data || {}, content: parsed.content };
+  } catch (err) {
+    const grund = (err as Error).message.split('\n')[0];
+    console.warn(`[wiki] Frontmatter nicht streng lesbar${filePath ? ' in ' + filePath : ''}: ${grund} — flacher Rückfall`);
+    const m = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+    if (!m) return { data: {}, content: fileContent };
+    const data: Record<string, any> = {};
+    for (const line of m[1].split(/\r?\n/)) {
+      const kv = line.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
+      if (!kv) continue;
+      let v = kv[2].trim();
+      if (v.length >= 2 && ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")))) v = v.slice(1, -1);
+      data[kv[1]] = v;
+    }
+    return { data, content: fileContent.slice(m[0].length) };
+  }
+}
 
 export interface WikiPage {
   slug: string[];
@@ -202,8 +230,10 @@ function preprocessWikilinks(markdown: string, lookupMap: Map<string, any>): str
         const relativeRawPath = cleanTargetName.replace('raw/public/Rechtsprechung/', '');
         return `<a href="/rechtsprechung/raw/${relativeRawPath}${section}">${alias}</a>`;
       }
-      if (cleanTargetName.startsWith('raw/public/Gesetze & Co/')) {
-        const relativeRawPath = cleanTargetName.replace('raw/public/Gesetze & Co/', '');
+      // Der Vault-Ordner heißt »Gesetze & Co.« (mit Punkt); Links ohne Punkt werden toleriert.
+      const gesetzePrefix = cleanTargetName.match(/^raw\/public\/Gesetze & Co\.?\//);
+      if (gesetzePrefix) {
+        const relativeRawPath = cleanTargetName.slice(gesetzePrefix[0].length);
         return `<a href="/gesetze/raw/${relativeRawPath}${section}">${alias}</a>`;
       }
       return `<span class="wiki-link-stub" title="Nicht vorhanden: ${cleanTargetName}">${alias}</span>`;
@@ -307,7 +337,7 @@ export function getPageBySlug(slug: string[]): WikiPage | null {
   if (!fs.existsSync(entry.absPath)) return null;
 
   const fileContent = fs.readFileSync(entry.absPath, 'utf-8');
-  const { data: frontmatter, content } = matter(fileContent);
+  const { data: frontmatter, content } = safeMatter(fileContent, entry.absPath);
 
   // Simple backlink extraction: find files in the lookup map that contain links to this page's basename
   const basename = path.basename(entry.absPath, '.md');
@@ -352,7 +382,7 @@ export function getPagesByCategory(category: string) {
     if (key.startsWith('wiki/') && val.category === category) {
       if (fs.existsSync(val.absPath)) {
         const fileContent = fs.readFileSync(val.absPath, 'utf-8');
-        const { data: frontmatter } = matter(fileContent);
+        const { data: frontmatter } = safeMatter(fileContent, val.absPath);
         pages.push({
           title: frontmatter.title || val.title,
           url: val.url,
@@ -509,8 +539,8 @@ export function getDesignSettings(): DesignSettings {
 function parseDesignFile(filePath: string): DesignSettings {
   try {
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const { data: frontmatter, content } = matter(fileContent);
-    
+    const { data: frontmatter, content } = safeMatter(fileContent, filePath);
+
     const variables: Record<string, string> = {};
     const googleFonts: string[] = [];
 

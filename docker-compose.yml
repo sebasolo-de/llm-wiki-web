@@ -12,9 +12,8 @@ services:
       NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-https://llm-wiki.hebler-betreuung.de}"
       WIKI_CONTENT_PATH: "${WIKI_CONTENT_PATH:-/app/content}"
       PORT: 3000
-    volumes:
-      # Mount the content repository root containing index.md, wiki/ and raw/
-      - "${HOST_CONTENT_PATH:-/opt/llm-wiki-public}:/app/content:ro"
+    # Kein Bind-Mount mehr: der Content liegt im Image (Dockerfile kopiert /app/content aus dem Build),
+    # ein Image ist damit ein reproduzierbarer Inhaltsstand (Mac-Mini-Plan 6.3, 2026-10-11).
     restart: unless-stopped
     networks:
       - remote-proxy-network

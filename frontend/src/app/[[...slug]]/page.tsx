@@ -2,13 +2,13 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import fs from 'fs';
 import path from 'path';
-import matter from 'gray-matter';
 import Link from 'next/link';
-import { 
-  getPageBySlug, 
-  buildPageLookupMap, 
+import {
+  getPageBySlug,
+  buildPageLookupMap,
   parseWikiMarkdown,
-  getPagesByCategory
+  getPagesByCategory,
+  safeMatter
 } from '@/lib/wiki';
 
 // Force static rendering parameter generation
@@ -117,9 +117,9 @@ export default async function WikiPage({ params }: PageProps) {
   let backlinks: string[] = [];
   let frontmatter: Record<string, any> = {};
 
-  const WIKI_ROOT = process.env.WIKI_CONTENT_PATH 
-    ? path.resolve(process.env.WIKI_CONTENT_PATH) 
-    : '/Users/sebastian/Sites/LLM-WIKI.public';
+  const WIKI_ROOT = process.env.WIKI_CONTENT_PATH
+    ? path.resolve(process.env.WIKI_CONTENT_PATH)
+    : path.resolve(process.cwd(), 'content');   // wie in lib/wiki.ts (MMP 6.4)
 
   const isSitemap = (slug.length === 1 && slug[0] === 'sitemap') || 
                     (slug.length === 2 && slug[0] === 'fachliteratur' && slug[1] === 'sitemap');
@@ -130,7 +130,7 @@ export default async function WikiPage({ params }: PageProps) {
       notFound();
     }
     const fileContent = fs.readFileSync(indexPath, 'utf-8');
-    const { data, content } = matter(fileContent);
+    const { data, content } = safeMatter(fileContent, indexPath);
     const lookup = buildPageLookupMap();
     
     pageTitle = data.title || 'Gesamtübersicht (Sitemap)';
@@ -144,7 +144,7 @@ export default async function WikiPage({ params }: PageProps) {
       notFound();
     }
     const fileContent = fs.readFileSync(indexPath, 'utf-8');
-    const { data, content } = matter(fileContent);
+    const { data, content } = safeMatter(fileContent, indexPath);
     const lookup = buildPageLookupMap();
     
     pageTitle = data.title || 'Startseite';
